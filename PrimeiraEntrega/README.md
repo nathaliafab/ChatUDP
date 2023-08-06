@@ -9,4 +9,6 @@ Implementação de comunicação UDP utilizando a biblioteca Socket na linguagem
 - Uma mensagem ou um arquivo são ou devem ser considerados a mesma coisa, bits, e devem seguir o mesmo fluxo. O que muda é que arquivos ou mensagens maiores que o buffer_size (lembrando de 1024 bytes) devem ser fragmentados em pacotes e reconstruídos no recebedor. 
 
 ### Testes:
-- Para testar o envio/recebimento do [`arquivo de texto`](/musica.txt) ou [`arquivo de imagem`](/pato.jpg), troque o `FILENAME` e `FILETYPE` no [`client.py`](/client.py).
+- Para testar o envio/recebimento do [`arquivo de texto`](/musica.txt) ou [`arquivo de imagem`](/pato.jpg), troque o `FILENAME` e `FILETYPE` no [`client.py`](/client.py) e o `FILETYPE` no [`server.py`](/server.py)
+
+- Além disso, lembre-se de iniciar o [`server.py`](/server.py) antes do [`client.py`](/client.py)
