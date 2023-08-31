@@ -1,9 +1,13 @@
 from socket import *
 from rdt_server import *
 
+FILENAME = '../assets/pato'       # Nome do arquivo a ser enviado
+RESPONSE = 'response-client'   # Nome do arquivo a ser recebido
+FILETYPE = 'jpg'        # Tipo do arquivo a ser enviado/recebido
+
 RDT = RDT_SERVER()
 
-file = open("recebidoClient.jpg",'wb')
+file = open(RESPONSE + '.' + FILETYPE, 'wb')
 
 while True:
     data = RDT.receive()
@@ -12,19 +16,13 @@ while True:
 
 file.close()
 
-file = open("./Assets/pato.jpg", "rb")
+file = open(FILENAME + '.' + FILETYPE, 'rb')
 
 while True:
-    data = file.read(RDT.BUFFERSIZE-800)
+    data = file.read(RDT.BUFFERSIZE - RDT.HEARDERSIZE)
     RDT.send_pkg(data)
     if not data: break
 
 file.close()
 
 RDT.close_connection()
-
-
-
-
-
-

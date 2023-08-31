@@ -7,6 +7,7 @@ class RDT_CLIENT:
         self.SEQ_NUMBER = 0
         self.ADDRESSPORT =  ADDRESSPORT
         self.BUFFERSIZE = BUFFERSIZE
+        self.HEARDERSIZE = 800
         self.UDP = socket(AF_INET, SOCK_DGRAM)
         print("Client running")
     

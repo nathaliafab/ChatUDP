@@ -3,7 +3,7 @@ from socket import *
 HOST = 'localhost'      # Endereco IP do Servidor
 PORT = 5000             # Porta que o servidor está
 BUFFER_SIZE = 1024      # Tamanho do buffer
-FILENAME = './assets/8ab433c58dc0ef160212745bf3973bef'       # Nome do arquivo a ser enviado
+FILENAME = '../assets/8ab433c58dc0ef160212745bf3973bef'       # Nome do arquivo a ser enviado
 RESPONSE = 'response'   # Nome do arquivo a ser recebido
 FILETYPE = 'jpg'        # Tipo do arquivo a ser enviado/recebido
 DEST = (HOST, PORT)     # Destino da mensagem

@@ -7,6 +7,7 @@ class RDT_SERVER:
         self.SEQ_NUMBER = 0
         self.ADDRESSPORT =  ADDRESSPORT
         self.BUFFERSIZE = BUFFERSIZE
+        self.HEARDERSIZE = 800
         self.UDP = socket(AF_INET, SOCK_DGRAM)
         self.UDP.bind(self.ADDRESSPORT)
         self.UDP.settimeout(2.0)
@@ -81,10 +82,3 @@ class RDT_SERVER:
     def close_connection(self):
         print("Encerrando socket do servidor")
         self.UDP.close()
-
-
-
-
-    
-
-
