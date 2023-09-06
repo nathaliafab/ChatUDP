@@ -1,4 +1,5 @@
 from socket import *
+import random
 
 class RDT_SERVER:
 
@@ -10,12 +11,14 @@ class RDT_SERVER:
         self.HEARDERSIZE = 800
         self.UDP = socket(AF_INET, SOCK_DGRAM)
         self.UDP.bind(self.ADDRESSPORT)
-        self.UDP.settimeout(2.0)
         print("Server running")
     
     def send(self, data):
         print("Enviando para o cliente")
         self.UDP.sendto(data, self.SENDER_ADDRES)
+
+    def pkgLossGenerator(self):
+        return random.random() < 0.05
 
     def send_pkg(self, data):
         data = str({
@@ -24,21 +27,30 @@ class RDT_SERVER:
         }).encode()
         ack = False
         while not ack:
-            self.send(data)
+            loss = self.pkgLossGenerator()
+            if loss == False:
+                self.send(data)
+            self.UDP.settimeout(2.0)
             try:
                 data, self.SENDER_ADDRES = self.UDP.recvfrom(self.BUFFERSIZE)
-            except socket.timeout:
-                print("ACK não recebido, enviando novamente")
+            except Exception as e:
+                print("ACK não recebido, enviando novamente.")
             else:
                 ack = self.rcv_ack(data)
+                self.UDP.settimeout(None)
 
     def receive(self):
         print("Recebendo pacote")
-        self.UDP.settimeout(10.0) # tempo de espera por pacote
-        data, self.SENDER_ADDRES = self.UDP.recvfrom(self.BUFFERSIZE)
-        data = self.rcv_pkg(data)
-        if data != "":
-            buffer = data
+        ack = False
+        buffer=""
+        while ack == False:
+            data, self.SENDER_ADDRES = self.UDP.recvfrom(self.BUFFERSIZE)
+            data = self.rcv_pkg(data)
+            if data != "":
+                buffer = data
+                ack = True
+            else:
+                print("Pacote duplicado!")
         print("Recebido")
         return buffer
     
@@ -53,7 +65,9 @@ class RDT_SERVER:
             'seq': self.SEQ_NUMBER,
             'payload' : "NACK"
         }).encode()
-        self.send(data)
+        loss = self.pkgLossGenerator()
+        if loss == False:
+            self.send(data)
 
 
     def rcv_pkg(self, data):
