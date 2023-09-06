@@ -12,6 +12,7 @@ file = open(RESPONSE + '.' + FILETYPE, 'wb')    # Cria o arquivo a ser recebido
 while True: # Recebe o arquivo
     data = RDT.receive()
     if not data: break
+    if isinstance(data, str): continue
     file.write(data)
 file.close()
 
