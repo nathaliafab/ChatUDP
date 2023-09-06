@@ -4,18 +4,21 @@ import random
 class RDT_SERVER:
 
     def __init__(self, ADDRESSPORT = ("", 5000), BUFFERSIZE = 1024):
-        self.SENDER_ADDRES = 0
+        self.SENDER_ADDRESS = 0
         self.SEQ_NUMBER = 0
         self.ADDRESSPORT =  ADDRESSPORT
         self.BUFFERSIZE = BUFFERSIZE
         self.HEARDERSIZE = 800
         self.UDP = socket(AF_INET, SOCK_DGRAM)
         self.UDP.bind(self.ADDRESSPORT)
-        print("Server running")
+        print("-- Servidor rodando --\n")
     
-    def send(self, data):
-        print("Enviando para o cliente")
-        self.UDP.sendto(data, self.SENDER_ADDRES)
+    def send(self, data, isAck):
+        if (isAck) :
+            print("Enviando ACK para o cliente...")
+        else :
+            print("Enviando pacote para o cliente...")
+        self.UDP.sendto(data, self.SENDER_ADDRESS)
 
     def pkgLossGenerator(self):
         return random.random() < 0.05
@@ -29,29 +32,31 @@ class RDT_SERVER:
         while not ack:
             loss = self.pkgLossGenerator()
             if loss == False:
-                self.send(data)
+                self.send(data, False)
+            else:
+                print("Enviando pacote para o cliente... (perdido)")
             self.UDP.settimeout(2.0)
             try:
-                data, self.SENDER_ADDRES = self.UDP.recvfrom(self.BUFFERSIZE)
-            except Exception as e:
-                print("ACK não recebido, enviando novamente.")
+                data, self.SENDER_ADDRESS = self.UDP.recvfrom(self.BUFFERSIZE)
+            except Exception:
+                print("Timeout! Enviando pacote novamente...")
             else:
                 ack = self.rcv_ack(data)
                 self.UDP.settimeout(None)
 
     def receive(self):
-        print("Recebendo pacote")
+        print("Recebendo pacote...")
         ack = False
         buffer=""
         while ack == False:
-            data, self.SENDER_ADDRES = self.UDP.recvfrom(self.BUFFERSIZE)
+            data, self.SENDER_ADDRESS = self.UDP.recvfrom(self.BUFFERSIZE)
             data = self.rcv_pkg(data)
             if data != "":
                 buffer = data
                 ack = True
             else:
-                print("Pacote duplicado!")
-        print("Recebido")
+                print("Recebido pacote duplicado!")
+        print("Recebido com sucesso.")
         return buffer
     
     def send_ack(self, ack):
@@ -67,7 +72,9 @@ class RDT_SERVER:
         }).encode()
         loss = self.pkgLossGenerator()
         if loss == False:
-            self.send(data)
+            self.send(data, True)
+        else:
+            print("Enviando ACK para o cliente... (perdido)")
 
 
     def rcv_pkg(self, data):
@@ -89,10 +96,15 @@ class RDT_SERVER:
         payload = data['payload']
         if SEQ_NUMBER == self.SEQ_NUMBER and payload == "ACK":
             self.SEQ_NUMBER = 1 - self.SEQ_NUMBER
+            print("ACK recebido com sucesso.")
             return True
+        elif(SEQ_NUMBER != self.SEQ_NUMBER and payload == "ACK"):
+            print("ACK recebido duplicado!")
+            return False
         else:
+            print("ACK não recebido!")
             return False
 
     def close_connection(self):
-        print("Encerrando socket do servidor")
+        print("\n-- Encerrando socket do servidor --\n")
         self.UDP.close()
