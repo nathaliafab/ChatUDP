@@ -88,6 +88,7 @@ class RDTServer:
     def add_new_client(self, address, name, ack):
         if address not in self.clients and name not in self.banned_names:
             self.clients.append(address)
+            self.clients_names.append(name)
             self.num_seq_list.append(b'0')
             self.expected_num_seq.append(b'1')
             self.ban_timer.append(0)
@@ -167,7 +168,7 @@ class RDTServer:
         elif self.ban_checker:
             self.send_ban_status(local_time, client, banned_index)
         elif not (message_content.strip()).startswith(f'@'):
-            self.send_general_message(message_content, local_time, client)
+            self.send_general_message(message_content, local_time, client, name_request)
 
     def send_client_list(self, name_request, local_time, client):
         i = self.clients.index(client)
@@ -186,9 +187,9 @@ class RDTServer:
         i = self.clients.index(client)
         self.send_pkt(f'[{local_time}] O usuario {self.clients_names[banned_index]} foi banido!!!'.encode(), client, i)
 
-    def send_general_message(self, message, local_time, client):
+    def send_general_message(self, message, local_time, client, name):
         i = self.clients.index(client)
-        self.send_pkt(f'[{local_time}] {message}'.encode(), client, i)
+        self.send_pkt(f'[{local_time}] {name}: {message}'.encode(), client, i)
 
     def update_banned_clients(self, banned_index):
         if len(self.ban_counter[banned_index]) >= 2 * len(self.clients_names) / 3:
