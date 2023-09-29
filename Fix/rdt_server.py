@@ -92,69 +92,72 @@ class RDT_Server:
 
 
     def broadcast(self):
-        banned_index = -1
-        while True:
-            while not self.messages.empty():
-                date_time = datetime.datetime.now()
-                local_time = date_time.strftime("%X") # tempo atual em HH:MM:SS
-                message, address = self.messages.get()     # pega uma mensagem da fila de mensagens
-                ack = message[0]                      # extrai o numero de sequencia da mensagem
-                message = message[1:]                 
-                name = message.decode().split(':')[0]
+        try:
+            banned_index = -1
+            while True:
+                while not self.messages.empty():
+                    date_time = datetime.datetime.now()
+                    local_time = date_time.strftime("%X") # tempo atual em HH:MM:SS
+                    message, address = self.messages.get()     # pega uma mensagem da fila de mensagens
+                    ack = message[0]                      # extrai o numero de sequencia da mensagem
+                    message = message[1:]                 
+                    name = message.decode().split(':')[0]
 
-                if address not in self.clients and name not in self.banned_names:
-                    self.clients.append(address)
-                    self.num_seq_list.append(b'0')
-                    self.expected_num_seq.append(b'1')
-                    self.ban_timer.append(0)
-                if name not in self.banned_names:
-                    self.send_ACK(ack, address)              # ACK for received message
+                    if address not in self.clients and name not in self.banned_names:
+                        self.clients.append(address)
+                        self.num_seq_list.append(b'0')
+                        self.expected_num_seq.append(b'1')
+                        self.ban_timer.append(0)
+                    if name not in self.banned_names:
+                        self.send_ACK(ack, address)              # ACK for received message
 
-                in_ban_name = ""
-                in_ban_index = 0
+                    in_ban_name = ""
+                    in_ban_index = 0
 
-                # verifica o index da pessoa que mandou 
-                try:
-                    index_sender = self.clients.index(address)
-                except:
-                    pass
+                    # verifica o index da pessoa que mandou 
+                    try:
+                        index_sender = self.clients.index(address)
+                    except:
+                        pass
 
-                self.ban_checker = False
-                self.vote_checker = False
+                    self.ban_checker = False
+                    self.vote_checker = False
 
-                # mensagem de verificação de ban
-                if (message.decode().split(':')[1].strip()).startswith('ban @'):
+                    # mensagem de verificação de ban
+                    if (message.decode().split(':')[1].strip()).startswith('ban @'):
 
-                    if time.time() >= (self.ban_timer[index_sender] + self.timer):          
-                        in_ban_name = (message.decode().split(':')[1].strip()).split('@')[1]
+                        if time.time() >= (self.ban_timer[index_sender] + self.timer):          
+                            in_ban_name = (message.decode().split(':')[1].strip()).split('@')[1]
 
-                        for i in range(len(self.clients)):
-                            # Verifica se o usuário que está banindo não está na lista de banidos
-                            if self.clients_names[i] == in_ban_name and name not in self.ban_counter[i]:
+                            for i in range(len(self.clients)):
+                                # Verifica se o usuário que está banindo não está na lista de banidos
+                                if self.clients_names[i] == in_ban_name and name not in self.ban_counter[i]:
 
-                                in_ban_index = i
-                                self.ban_counter[i].append(name)
-                                self.ban_timer[index_sender] = time.time()
-                                if len(self.ban_counter[i]) >= 2*len(self.clients_names)/3:
-                                    self.ban_checker = True
-                                    banned_index = i
-                                    
-                                self.vote_checker = True
+                                    in_ban_index = i
+                                    self.ban_counter[i].append(name)
+                                    self.ban_timer[index_sender] = time.time()
+                                    if len(self.ban_counter[i]) >= 2*len(self.clients_names)/3:
+                                        self.ban_checker = True
+                                        banned_index = i
+                                        
+                                    self.vote_checker = True
 
-                # envio de mensagens para todos os clientes
-                self.send_to_all_clients(message=message, local_time=local_time, address=address, in_ban_index=in_ban_index, in_ban_name=in_ban_name)
+                    # envio de mensagens para todos os clientes
+                    self.send_to_all_clients(message=message, local_time=local_time, address=address, in_ban_index=in_ban_index, in_ban_name=in_ban_name)
 
-                # Retira o usuário da lista caso ele saia do chat
-                self.handle_bye_message(message=message)
-                
-                # retira o usuário da lista caso ele seja banido ou saia do chat
-                self.check_ban(banned_index=banned_index)
+                    # Retira o usuário da lista caso ele saia do chat
+                    self.handle_bye_message(message=message)
+                    
+                    # retira o usuário da lista caso ele seja banido ou saia do chat
+                    self.check_ban(banned_index=banned_index)
+        except Exception as e:
+            print(e)
                 
 
     def handle_first_message_banned_user(self, message, local_time, client, address, i):
         name = message.decode().split(':')[1]
-        if (name in self.banned_names):
-            self.send_pkt(f'[{local_time}] O usuario {name} esta banido, nao pode entrar'.encode(), client, i)
+        if (name in self.banned_names or name in self.clients_names):
+            self.send_pkt(f'[{local_time}] O usuario {name} nao pode entrar'.encode(), client, i)
             if self.clients[i] == address:       # se o usuario que tentou entrar estive banido
                 self.clients.pop(i)
                 self.num_seq_list.pop(i)
@@ -226,6 +229,9 @@ class RDT_Server:
             self.ban_timer.pop(banned_index)
             banned_index = 0
     
+    
+    
+        
     
     def start(self):
         t1 = threading.Thread(target=self.receive_message)
