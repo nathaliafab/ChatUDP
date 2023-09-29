@@ -69,9 +69,9 @@ class RDT_Server:
         
         elif message_content.startswith(" rmvfrommylis"):
             if name_request == self.clients_names[i]:
-                add_name = (message.decode().split(':')[1].strip()).split('@')[1]
-                if add_name in self.clients_names:
-                    self.friend_list[i].append(add_name)
+                rm_name = (message.decode().split(':')[1].strip()).split('@')[1]
+                if rm_name in self.clients_names:
+                    self.friend_list[i].remove(rm_name)
 
         # se a mensagem for uma mensagem privada, envia apenas para o destinatário
         elif (message_content.strip()).startswith(f'@{self.clients_names[i]}'):
@@ -100,7 +100,6 @@ class RDT_Server:
                 message, address = self.messages.get()     # pega uma mensagem da fila de mensagens
                 ack = message[0]                      # extrai o numero de sequencia da mensagem
                 message = message[1:]                 
-
                 name = message.decode().split(':')[0]
 
                 if address not in self.clients and name not in self.banned_names:
