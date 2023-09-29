@@ -30,11 +30,6 @@ class RDT_Server:
         if num_seq == self.expected_num_seq[index]:                 # se o que foi recebido era o esperado, muda o número esperado
             self.expected_num_seq[index] =  b'0' if (self.expected_num_seq[index] == b'1') else b'1'
 
-    # envia pacote para o destino
-    def send_pkt(self, msg, address, index):
-        self.num_seq_list[index] = b'0' if (self.num_seq_list[index] == b'1') else b'1'
-        pkt = msg
-        self.server.sendto(pkt, address)                          # enviar o pacote em bytes enquanto tiver
 
     # thread que recebe as mensagens e coloca em uma fila
     def receive_message(self):
@@ -46,6 +41,12 @@ class RDT_Server:
                     self.messages.put((message, address))
             except:
                 pass
+            
+    # envia pacote para o destino
+    def send_pkt(self, msg, address, index):
+        self.num_seq_list[index] = b'0' if (self.num_seq_list[index] == b'1') else b'1'
+        pkt = msg
+        self.server.sendto(pkt, address)                          # enviar o pacote em bytes enquanto tiver
 
     def handle_message(self, message_content, local_time, name_request, client, i, in_ban_index, message, in_ban_name):
         # se a mensagem for um bye
