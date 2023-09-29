@@ -45,6 +45,7 @@ class RDTServer:
             self.expected_num_seq[index] =  b'0' if (self.expected_num_seq[index] == b'1') else b'1'
 
     def send_pkt(self, msg, address, index):
+      print(address)
       self.update_num_seq_list(index)
       pkt = msg
       self.server.sendto(pkt, address)
@@ -80,7 +81,7 @@ class RDTServer:
           message, address = self.messages.get()
           ack = message[0]
           message = message[1:]
-          name = message.decode().split(':')[0]
+          name = message.decode().split(':')[1]
           self.add_new_client(address, name, ack)
           self.process_ban_request(message, address, name, local_time, banned_index)
           self.process_client_messages(message, address, name, local_time, banned_index)
@@ -131,17 +132,19 @@ class RDTServer:
 
     def handle_new_client(self, message, address, name, local_time, i, client):
         name = message.decode().split(':')[1]
+        print(name)
         if (name in self.banned_names):
             self.send_pkt(f'[{local_time}] O user {name} está banido.'.encode(), client, i)
             if self.clients[i] == address:
                 self.remove_client(i)
         else:
             if i == 0:
-                self.clients_names.append(name)
                 self.ban_counter.append([])
             self.send_pkt(f'[{local_time}]hi, meu nome eh:{name}'.encode(), client, i)
 
     def remove_client(self, i):
+        print(self.clients)
+        print(i)
         self.clients.pop(i)
         self.num_seq_list.pop(i)
         self.expected_num_seq.pop(i)
@@ -157,10 +160,13 @@ class RDTServer:
     def handle_client_requests(self, message_content, name_request, local_time, client, address, banned_index):
         i = self.clients.index(client)
         if message_content == " bye":
-            self.send_pkt(f'[{local_time}] {name_request} saiu da sala.'.encode(), client, i)
-            self.remove_client(i)
+            self.send_bye_message(local_time, client, name_request)
         elif message_content == " list":
-            self.send_client_list(name_request, local_time, i, client)
+            self.send_client_list(address, local_time)
+        elif (message_content.strip()).startswith(' ban'):  # Check for ban command
+            self.process_ban_request(message_content.encode(), address, name_request, local_time, banned_index)
+            if self.vote_checker:
+                self.send_vote_status(local_time, client, banned_index)
         elif (message_content.strip()).startswith(f'@{self.clients_names[i]}'):
             self.send_direct_message(name_request, message_content, local_time, client)
         elif self.vote_checker:
@@ -170,10 +176,13 @@ class RDTServer:
         elif not (message_content.strip()).startswith(f'@'):
             self.send_general_message(message_content, local_time, client, name_request)
 
-    def send_client_list(self, name_request, local_time, client):
-        i = self.clients.index(client)
-        if name_request == self.clients_names[i]:
-            self.send_pkt(f'[{local_time}] {self.clients_names}'.encode(), client, i)
+        self.update_banned_clients(banned_index)
+        print(self.clients_names)
+
+    def send_client_list(self, requester_address, local_time):
+        i = self.clients.index(requester_address)
+        self.send_pkt(f'[{local_time}] {self.clients_names}'.encode(), requester_address, i)
+
 
     def send_direct_message(self, name_request, message_content, local_time, client):
         i = self.clients.index(client)
@@ -191,16 +200,61 @@ class RDTServer:
         i = self.clients.index(client)
         self.send_pkt(f'[{local_time}] {name}: {message}'.encode(), client, i)
 
+    def send_bye_message(self, local_time, client, name):
+        i = self.clients.index(client)
+        self.send_pkt(f'[{local_time}] {name} saiu da sala.'.encode(), client, i)
+        print("1")
+
+    def process_ban_request(self, message, address, name, local_time, banned_index):
+        try:
+            index_sender = self.clients.index(address)
+        except:
+         pass
+
+        if (message.decode().split(':')[1].strip()).startswith('ban '):
+            in_ban_name = (message.decode().split(':')[1].strip()).split('ban ')[1]
+            self.handle_ban_request(message, index_sender, name, in_ban_name, self.in_ban_index)
+
+
+    def handle_ban_request(self, message, index_sender, name, in_ban_name, in_ban_index):
+        if time.time() >= (self.ban_timer[index_sender] + self.timer):
+            in_ban_name = (message.decode().split(':')[1].strip()).split('ban ')[1]
+            self.ban_timer[index_sender] = time.time()
+            if in_ban_name not in self.clients_names:
+                print(f"User {in_ban_name} not found")
+                return
+            user_index = self.clients_names.index(in_ban_name)
+            self.ban_counter[user_index] = []
+
+        for i in range(len(self.clients_names)):
+            if self.clients_names[i] == in_ban_name and name not in self.ban_counter[i]:
+                self.update_ban_counter(i, name, index_sender)
+
+    def update_ban_counter(self, i, name, index_sender):
+        self.ban_counter[i].append(name)
+        self.ban_timer[index_sender] = time.time()
+        if len(self.ban_counter[i]) >= len(self.clients_names) / 2:
+            self.ban_checker = True
+            self.banned_index = i
+
     def update_banned_clients(self, banned_index):
-        if len(self.ban_counter[banned_index]) >= 2 * len(self.clients_names) / 3:
+        if len(self.ban_counter[banned_index]) >= len(self.clients_names) / 2:
             self.banned_names.append(self.clients_names[banned_index])
+            for client in self.clients:
+                i = self.clients.index(client)
+                self.send_pkt(f'[{datetime.datetime.now().strftime("%X")}] O usuario {self.clients_names[banned_index]} foi banido!!!'.encode(), client, i)
             self.remove_client(banned_index)
             self.banned_index = 0
 
     def handle_bye_request(self, message, name_request):
-        if message.decode().split(':')[1] == " bye":
-            index = self.clients_names.index(name_request)
-            self.remove_client(index)
+        if message == " bye":
+          index = self.clients_names.index(name_request)
+          self.clients.pop(index)
+          self.clients_names.pop(index)
+          self.ban_counter.pop(index)
+          self.num_seq_list.pop(index)
+          self.expected_num_seq.pop(index)
+          self.ban_timer.pop(index)
 
 
 

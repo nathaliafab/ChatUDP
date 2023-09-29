@@ -4,9 +4,9 @@ import random
 
 class RDT_Client:
     def __init__(self):
-        self.BUFFER_SIZE = 1024      # tamanho do buffer
-        self.num_seq = b'0'          # número de sequencia inicial
-        self.expected_num_seq = b'1' # primeiro número de sequencia esperado
+        self.BUFFER_SIZE = 1024     
+        self.num_seq = b'0'         
+        self.expected_num_seq = b'1' 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.SERVER = ('localhost', 4000)
         self.correct_ACK = True
@@ -16,12 +16,10 @@ class RDT_Client:
     def send_pkt(self, msg):
         self.num_seq = b'0' if (self.num_seq == b'1') else b'1'
         pkt = self.num_seq + msg
-        print(f"sending msg to {self.SERVER}")
-        self.client.sendto(pkt, self.SERVER)                     # enviar o pacote em bytes enquanto tiver
+        self.client.sendto(pkt, self.SERVER)
         self.correct_ACK = False
         while not self.correct_ACK:
             if socket.timeout:
-                print("timeout")
                 break
 
     def receive_message(self):
@@ -32,6 +30,8 @@ class RDT_Client:
                     self.correct_ACK = True
                 else:
                     print(message.decode())
+                    if (f'{self.name} saiu da sala.') in message.decode():
+                        break
             except:
                 pass
 
@@ -49,5 +49,6 @@ class RDT_Client:
             self.send_pkt(f'{self.name}: {message}'.encode())
 
             if message == 'bye':
+                print("sent bye")
                 thread.join()
-                break
+                exit()
