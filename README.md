@@ -16,6 +16,44 @@ Implementação de transferência confiável, segundo o canal de transmissão co
 - Para teste do algoritmo, deve-se implementar um gerador de perdas de pacotes aleatórios, ocasionando timeout no transmissor para tais pacotes e demonstrando a eficiência do rdt3.0 implementado.
 - Não é necessário a implementação do checksum, pois o UDP já realiza essa função (e antes do UDP também há um checksum na camada de enlace).
 
+## Terceira Etapa: Chat de sala única com paradigma cliente-servidor
+
+Implementação de um chat de sala única seguindo o paradigma cliente-servidor com as seguintes especificações:
+
+- **Conectar à sala:** Os clientes podem se conectar à sala digitando o comando `hi, meu nome eh <nome_do_usuario>`.
+
+- **Sair da sala:** Os clientes podem sair da sala digitando o comando `bye`.
+
+- **Exibir lista de usuários do chat:** Os clientes podem verificar a lista de usuários na sala com o comando `list`.
+
+- **Exibir lista de amigos:** Os clientes podem ver a lista de amigos com o comando `mylist`.
+
+- **Adicionar usuário à lista de amigos:** Os clientes podem adicionar um usuário à sua lista de amigos com o comando `addtomylist <nome_do_usuario>`. O usuário adicionado receberá uma tag de `[amigo]` em suas mensagens.
+
+- **Remover usuário da lista de amigos:** Os clientes podem remover um usuário de sua lista de amigos com o comando `rmvfrommylist <nome_do_usuario>`. O usuário removido perderá a tag de `[amigo]` em suas mensagens.
+
+- **Banir usuário da sala:** Os clientes podem banir um usuário da sala com o comando `ban <nome_do_usuario>`. O servidor iniciará uma contagem de votos para banir o usuário, e se a contagem atingir mais da metade dos clientes conectados, o usuário será banido. Todos os clientes receberão uma mensagem do servidor informando o progresso do ban.
+
+### Formato das Mensagens
+Cada mensagem enviada na sala segue o formato:
+```
+<IP>:<PORTA>/~<nome_usuario>: <mensagem> <hora-data>
+```
+
+### Funcionalidades Adicionais
+- Quando um usuário se conecta à sala, os outros usuários são notificados da nova presença (ex: "João entrou na sala").
+
+- Mensagens enviadas por qualquer cliente são exibidas para todos os outros clientes.
+
+- Não é permitido que dois usuários com o mesmo nome se conectem à sala.
+
+### Implementação Técnica
+- Utiliza-se um socket UDP para comunicação entre o servidor e os clientes.
+
+- A transmissão é confiável, implementada em camada de aplicação seguindo o RDT 3.0, conforme descrito no livro "Redes de Computadores e a Internet" do Kurose.
+
+- Permitir que múltiplos clientes se conectem à sala simultaneamente e interajam de acordo com as funcionalidades especificadas.
+
 ### Testes:
 - Para testar o envio/recebimento de arquivos, troque `FILENAME` e `FILETYPE` no client e no server.
 - Além disso, lembre-se de iniciar o server antes do client.
