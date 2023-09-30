@@ -28,11 +28,11 @@ Implementação de um chat de sala única seguindo o paradigma cliente-servidor 
 
 - **Exibir lista de amigos:** Os clientes podem ver a lista de amigos com o comando `mylist`.
 
-- **Adicionar usuário à lista de amigos:** Os clientes podem adicionar um usuário à sua lista de amigos com o comando `addtomylist <nome_do_usuario>`. O usuário adicionado receberá uma tag de `[amigo]` em suas mensagens.
+- **Adicionar usuário à lista de amigos:** Os clientes podem adicionar um usuário à sua lista de amigos com o comando `addtomylist @<nome_do_usuario>`.
 
-- **Remover usuário da lista de amigos:** Os clientes podem remover um usuário de sua lista de amigos com o comando `rmvfrommylist <nome_do_usuario>`. O usuário removido perderá a tag de `[amigo]` em suas mensagens.
+- **Remover usuário da lista de amigos:** Os clientes podem remover um usuário de sua lista de amigos com o comando `rmvfrommylist @<nome_do_usuario>`.
 
-- **Banir usuário da sala:** Os clientes podem banir um usuário da sala com o comando `ban <nome_do_usuario>`. O servidor iniciará uma contagem de votos para banir o usuário, e se a contagem atingir mais da metade dos clientes conectados, o usuário será banido. Todos os clientes receberão uma mensagem do servidor informando o progresso do ban.
+- **Banir usuário da sala:** Os clientes podem banir um usuário da sala com o comando `ban @<nome_do_usuario>`. O servidor iniciará uma contagem de votos para banir o usuário, e se a contagem atingir mais da metade dos clientes conectados, o usuário será banido. Todos os clientes receberão uma mensagem do servidor informando o progresso do ban.
 
 ### Formato das Mensagens
 Cada mensagem enviada na sala segue o formato:
