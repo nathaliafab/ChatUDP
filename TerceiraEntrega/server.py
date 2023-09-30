@@ -1,4 +1,4 @@
 from rdt_server import *
 
-rdt = RDTServer()
-rdt.start()
+rdt_server = RDT_Server()
+rdt_server.start()
